@@ -1,19 +1,25 @@
 import { Error, Loader, SongCard } from "../components";
 import { genres } from "../assets/constants";
 import { useGetTopChartsQuery } from "../redux/services/shazamCore";
-import { useDispatch,useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { selectGenreListId } from "../redux/features/playerSlice";
+import { useGetSongsByGenreQuery } from "../redux/services/shazamCore";
 
 const Discover = () => {
-  const {data,isFetching,error} = useGetTopChartsQuery();
-  const genereTitle = "Pop";
   const dispatch = useDispatch();
-  const {activeSong,isPlaying} = useSelector((state)=>state.player);
-  if(isFetching) { 
-    return <Loader title="Loading Songs..."></Loader>
+  const { activeSong, isPlaying, genreListId } = useSelector(
+    (state) => state.player
+  );
+  const { data, isFetching, error } = useGetSongsByGenreQuery(
+    genreListId || "POP"
+  );
+  const genereTitle = genres.find(({value})=>value===genreListId)?.title;
+  if (isFetching) {
+    return <Loader title="Loading Songs..."></Loader>;
   }
 
-  if(error){
-    return <Error/>
+  if (error) {
+    return <Error />;
   }
 
   return (
@@ -23,10 +29,10 @@ const Discover = () => {
           Discover {genereTitle}
         </h2>
         <select
-          name=""
-          id=""
-          onChange={() => {}}
-          value=""
+          onChange={(e) => {
+            dispatch(selectGenreListId(e.target.value));
+          }}
+          value={genreListId || "pop"}
           className="bg-black text-gray-300 p-3 text-sm rounded-lg outline-none sm:mt-0 mt-5"
         >
           {genres?.map((genre) => {
@@ -40,9 +46,18 @@ const Discover = () => {
       </div>
 
       <div className="flex flex-wrap sm:justify-start gap-8">
-          {data?.map((song,i)=>{
-            return <SongCard key={song.key} song={song} i={i} isPlaying={isPlaying} activeSong={activeSong} data={data}/>
-          })}
+        {data?.map((song, i) => {
+          return (
+            <SongCard
+              key={song.key}
+              song={song}
+              i={i}
+              isPlaying={isPlaying}
+              activeSong={activeSong}
+              data={data}
+            />
+          );
+        })}
       </div>
     </div>
   );
